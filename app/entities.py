@@ -1,10 +1,4 @@
-from datetime import datetime
-from .exceptions import InvalidDateFormatError, FutureDateError
-
-
 class Field:
-    """Base class for record fields."""
-    
     def __init__(self, value):
         self.value = value
 
