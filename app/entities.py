@@ -1,9 +1,6 @@
 """Notes module containing the Note class."""
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import List
 class Note:
     """Represents a single note with title, content, creation time, and tags.
 
