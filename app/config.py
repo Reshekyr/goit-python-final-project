@@ -1,3 +1,6 @@
+#===
+# Fuzzy matching configuration
+#===
 FUZZY_MATCH_CUTOFF = 0.6
 VALID_COMMANDS = [
     # Contacts
@@ -18,3 +21,4 @@ VALID_COMMANDS = [
     "close",
     "exit"
 ]
+N_CLOSE_MATCHES = 1
