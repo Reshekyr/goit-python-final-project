@@ -1,9 +1,11 @@
 
-"""Notes module containing the Note class."""
+
 from collections import UserDict
 from datetime import date, datetime, timedelta
 from typing import List, Optional, Dict, Any
+import re
 
+"""Notes module containing the Note class."""
 class Note:
     """Represents a single note with title, content, creation time, and tags.
 
@@ -74,6 +76,39 @@ class Field:
     def __str__(self):
         return str(self.value)
 
+      
+class Phone(Field):
+    """Class Phone with normalize and validation func."""
+    
+    def __init__(self, value):
+        cleaned_phone = self._clean_and_normalize_phone(value)
+        self._validate_phone(cleaned_phone)
+        super().__init__(cleaned_phone)
+    
+    def _clean_and_normalize_phone(self, phone_number):
+        """Clean and normalize phone number."""
+        # Remove leading/trailing whitespace
+        phone_number = phone_number.strip()
+
+        # Remove all non-digit characters
+        phone_number = re.sub(r"[^\d]", "", phone_number)
+
+        # Full Ukrainian number with country code
+        if phone_number.startswith("380") and len(phone_number) > 10:
+            return phone_number[2:]
+        else:
+            # Other cases
+            return phone_number
+    
+    def _validate_phone(self, phone):
+        """Validate cleaned phone number."""
+        # Check length - exactly 10 digits
+        if len(phone) != 10:
+            raise ValueError(
+                f"Phone number must contain exactly 10 digits. "
+                f"Got {len(phone)} digits: '{phone}'"
+            )
+            
 
 class Address(Field):
     """Class for storing contact address."""
