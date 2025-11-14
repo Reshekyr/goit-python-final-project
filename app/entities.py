@@ -51,8 +51,6 @@ class Notebook:
         Returns:
             The found note or None if not found.
         """
-        if title is None:
-            return None
         key = title.strip()
         if not key:
             return None
@@ -148,9 +146,9 @@ class Notebook:
         unique = set()
         for note in self._notes.values():
             tags = getattr(note, "tags", []) or []
-            for t in tags:
-                if isinstance(t, str) and t.strip():
-                    unique.add(t.strip().lower())
+            for tag in tags:
+                if isinstance(tag, str) and tag.strip():
+                    unique.add(tag.strip().lower())
         return sorted(unique)
 
     def sort_by_tags(self, tag_list):
