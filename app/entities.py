@@ -1,7 +1,9 @@
 
 """Notes module containing the Note class."""
+from collections import UserDict
+from datetime import date, datetime, timedelta
+from typing import List, Optional, Dict, Any
 
-from datetime import datetime
 class Note:
     """Represents a single note with title, content, creation time, and tags.
 
@@ -12,17 +14,17 @@ class Note:
         tags: A list of lowercase tags without duplicates.
     """
     def __init__(self, title: str, content: str):
-        
+
         if not title or not title.strip():
             raise ValueError("title must not be empty")
         if not content or not content.strip():
             raise ValueError("content must not be empty")
-        
+
         self.title = title
         self.content = content
         self.created_at = datetime.now()
         self.tags = []
-        
+
     def add_tag(self, tag: str) -> None:
         """Add a lowercase tag if non-empty and not already present.
 
@@ -64,10 +66,6 @@ class Note:
             return f"{header_line}\n{body_line}\n{tags_line}"
         return f"{header_line}\n{body_line}"
 
-from collections import UserDict
-from datetime import date, datetime, timedelta
-from typing import List, Optional, Dict, Any
-
 class Field:
     def __init__(self, value):
         self.value = value
@@ -80,6 +78,174 @@ class Address(Field):
     """Class for storing contact address."""
 
     def __init__(self, value):
+        super().__init__(value)
+
+
+class Notebook:
+    """A collection manager for Note objects keyed by their title.
+
+    Notes are stored in an internal dictionary where keys are unique titles and
+    values are Note-like objects with attributes: title, content, created_at, tags.
+    """
+
+    def __init__(self):
+        """Initialize the notebook with an empty dictionary."""
+        self._notes = {}
+
+    def add_note(self, note):
+        """Add a note to the notebook ensuring unique title.
+
+        Args:
+            note: A Note-like object with 'title' attribute.
+
+        Raises:
+            ValueError: If a note with the same title already exists.
+        """
+        key = note.title.strip() if getattr(note, "title", None) is not None else ""
+        if not key:
+            raise ValueError("note.title must not be empty")
+        if key in self._notes:
+            raise ValueError(f"Note with title '{key}' already exists")
+        self._notes[key] = note
+
+    def find_note(self, title):
+        """Find a note by title.
+
+        Args:
+            title: The title of the note to find.
+
+        Returns:
+            The found note or None if not found.
+        """
+        key = title.strip()
+        if not key:
+            return None
+        return self._notes.get(key)
+
+    def delete_note(self, title):
+        """Delete a note by title.
+
+        Args:
+            title: The title of the note to delete.
+
+        Returns:
+            True if the note was deleted, False if it did not exist.
+        """
+        if title is None:
+            return False
+        key = title.strip()
+        if not key:
+            return False
+        return self._notes.pop(key, None) is not None
+
+    def edit_note(self, title, new_content, update_created_at=False):
+        """Edit a note's content. Optionally update its created_at timestamp.
+
+        Args:
+            title: The title of the note to edit.
+            new_content: The new content for the note.
+            update_created_at: If True, update created_at to now (optional).
+
+        Returns:
+            True if the note was edited, False if not found or invalid content.
+        """
+        note = self.find_note(title)
+        if note is None:
+            return False
+        if new_content is None or not str(new_content).strip():
+            return False
+        note.content = str(new_content).strip()
+        if update_created_at and hasattr(note, "created_at"):
+            note.created_at = datetime.now()
+        return True
+
+    def search_notes(self, keyword):
+        """Search notes by keyword in title and content (case-insensitive).
+
+        Args:
+            keyword: The search keyword.
+
+        Returns:
+            A list of matching notes.
+        """
+        if keyword is None:
+            return []
+        query = str(keyword).strip().lower()
+        if not query:
+            return []
+        results = []
+        for note in self._notes.values():
+            title_text = str(getattr(note, "title", "")).lower()
+            content_text = str(getattr(note, "content", "")).lower()
+            if query in title_text or query in content_text:
+                results.append(note)
+        return results
+
+    def show_all(self):
+        """Return all notes as a list."""
+        return list(self._notes.values())
+
+    # ---- Tag-related (bonus) methods ----
+    def find_by_tag(self, tag):
+        """Find all notes that contain the specified tag (case-insensitive).
+
+        Args:
+            tag: The tag to search for.
+
+        Returns:
+            A list of notes that have the given tag.
+        """
+        if tag is None:
+            return []
+        needle = str(tag).strip().lower()
+        if not needle:
+            return []
+        results = []
+        for note in self._notes.values():
+            tags = getattr(note, "tags", []) or []
+            if needle in [t.lower() for t in tags]:
+                results.append(note)
+        return results
+
+    def get_all_tags(self):
+        """Get all unique tags across all notes as a sorted list."""
+        unique = set()
+        for note in self._notes.values():
+            tags = getattr(note, "tags", []) or []
+            for tag in tags:
+                if isinstance(tag, str) and tag.strip():
+                    unique.add(tag.strip().lower())
+        return sorted(unique)
+
+    def sort_by_tags(self, tag_list):
+        """Return notes sorted by relevance to the provided tag list.
+
+        Relevance is the number of matching tags between the note and tag_list.
+        Notes with zero matches are excluded.
+
+        Args:
+            tag_list: Iterable of tags to match against.
+
+        Returns:
+            A list of notes sorted by descending number of tag matches; ties are
+            broken by ascending title.
+        """
+        if not tag_list:
+            return []
+        query_tags = {str(t).strip().lower() for t in tag_list if str(t).strip()}
+        if not query_tags:
+            return []
+
+        scored = []
+        for note in self._notes.values():
+            note_tags = {str(t).strip().lower() for t in (getattr(note, "tags", []) or []) if str(t).strip()}
+            matches = len(note_tags & query_tags)
+            if matches > 0:
+                scored.append((matches, getattr(note, "title", ""), note))
+
+        # Sort by matches desc, then by title asc for deterministic ordering
+        scored.sort(key=lambda x: (-x[0], x[1]))
+        return [n for _, __, n in scored]
         # Check that address is not empty
         if not value or not value.strip():
             raise ValueError("Address cannot be empty")
@@ -92,7 +258,6 @@ class Birthday(Field):
     """Class for storing birthday with validation."""
 
     def __init__(self, value):
-        super().__init__(value)
         try:
             # Parse string into datetime object
             # Format: DD.MM.YYYY (e.g., 25.12.1990)
@@ -336,4 +501,152 @@ class AddressBook(UserDict):
 
         return fields
 
+
+class Record:
+    """
+    Represents a single contact in the address book.
+
+    Uses composition of field classes:
+    - Name (required)
+    - Phone (multiple)
+    - Email (multiple)
+    - Address (multiple)
+    - Birthday (optional)
+    """
+
+    def __init__(self, name: str) -> None:
+        """
+        Create a new contact record.
+
+        :param name: Contact name as a string.
+        """
+        self.name: Name = Name(name)
+        self.phones: List[Phone] = []
+        self.emails: List[Email] = []
+        self.addresses: List[Address] = []
+        self.birthday: Optional[Birthday] = None
+
+    # ---------- phone methods ----------
+
+    def add_phone(self, phone: str) -> None:
+        """
+        Add a new phone number to the contact.
+
+        Validation is handled inside the Phone class.
+
+        :param phone: Phone number as a string.
+        """
+        self.phones.append(Phone(phone))
+
+    def find_phone(self, phone: str) -> Optional[Phone]:
+        """
+        Find a phone object by its numeric value.
+
+        :param phone: Phone number to search for.
+        :return: Phone instance if found, otherwise None.
+        """
+        digits = "".join(ch for ch in str(phone) if ch.isdigit())
+        for phone_obj in self.phones:
+            if phone_obj.value == digits:
+                return phone_obj
+        return None
+
+    def remove_phone(self, phone: str) -> bool:
+        """
+        Remove a phone by its value.
+
+        :param phone: Phone number to remove.
+        :return: True if removed, False if not found.
+        """
+        target = self.find_phone(phone)
+        if target is None:
+            return False
+        self.phones.remove(target)
+        return True
+
+    def edit_phone(self, old_phone: str, new_phone: str) -> bool:
+        """
+        Replace an existing phone with a new one.
+
+        :param old_phone: Existing phone number.
+        :param new_phone: New phone number.
+        :return: True if the phone was updated, False if old_phone was not found.
+        """
+        target = self.find_phone(old_phone)
+        if target is None:
+            return False
+        new_phone_obj = Phone(new_phone)  # validation happens in Phone
+        target.value = new_phone_obj.value
+        return True
+
+    # ---------- email / address / birthday ----------
+
+    def add_email(self, email: str) -> None:
+        """
+        Add an email to the contact.
+
+        Email validation is handled inside the Email class.
+
+        :param email: Email address as a string.
+        """
+        self.emails.append(Email(email))
+
+    def add_address(self, address: str) -> None:
+        """
+        Add an address to the contact.
+
+        :param address: Address as a string.
+        """
+        self.addresses.append(Address(address))
+
+    def add_birthday(self, birthday_str: str) -> None:
+        """
+        Set or update the birthday for the contact.
+
+        :param birthday_str: Birthday in string form, e.g. '15.03.1990'.
+        """
+        self.birthday = Birthday(birthday_str)
+
+    def show_birthday(self) -> Optional[str]:
+        """
+        Return the birthday formatted as DD.MM.YYYY.
+
+        :return: Formatted birthday string or None if birthday is not set.
+        """
+        if not self.birthday:
+            return None
+        return self.birthday.value.strftime("%d.%m.%Y")
+
+    # ---------- representation ----------
+
+    def __str__(self) -> str:  # pragma: no cover
+        """
+        Return a human-readable representation of the contact.
+
+        Example:
+            Contact: John
+            Phones: 0501234567, 0671234567
+            Emails: john@gmail.com
+            Addresses: Kyiv, Street 1
+            Birthday: 15.03.1990
+        """
+        lines: List[str] = [f"Contact: {self.name.value}"]
+
+        if self.phones:
+            phones_str = ", ".join(phone.value for phone in self.phones)
+            lines.append(f"Phones: {phones_str}")
+
+        if self.emails:
+            emails_str = ", ".join(email.value for email in self.emails)
+            lines.append(f"Emails: {emails_str}")
+
+        if self.addresses:
+            addresses_str = ", ".join(address.value for address in self.addresses)
+            lines.append(f"Addresses: {addresses_str}")
+
+        birthday_str = self.show_birthday()
+        if birthday_str:
+            lines.append(f"Birthday: {birthday_str}")
+
+        return "\n".join(lines)
 
