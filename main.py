@@ -1,5 +1,8 @@
+
 import sys
 from typing import Callable, Dict, Tuple
+from app.utils import parse_input
+from app.handlers import handlers
 
 try:
     # If handlers are available in the project, leverage them
@@ -68,5 +71,6 @@ if __name__ == "__main__":
     except Exception as err:
         print(f"Фатальна помилка: {err}", file=sys.stderr)
         sys.exit(1)
+
 
 

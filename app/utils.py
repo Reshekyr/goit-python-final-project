@@ -1,3 +1,4 @@
+
 from difflib import get_close_matches
 from config import FUZZY_MATCH_CUTOFF, VALID_COMMANDS, N_CLOSE_MATCHES
 
@@ -6,3 +7,8 @@ def suggest_command(user_command: str) -> list[str]:
     if not user_command:
         return ""
     return get_close_matches(user_command, VALID_COMMANDS, n=N_CLOSE_MATCHES, cutoff=FUZZY_MATCH_CUTOFF)
+  
+def parse_input(input_string: str) -> tuple[str, list[str]]:
+    command, *args = input_string.split()
+    return command.lower(), args
+
