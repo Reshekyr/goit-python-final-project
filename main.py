@@ -1,97 +1,72 @@
-from __future__ import annotations
+import sys
+from typing import Callable, Dict, Tuple
 
-from app.handlers import handlers as CONTACT_HANDLERS  # contact-related commands
-from app.utils import parse_input
-from app.memory import load_data, save_data  # adjust if your module name is different
+try:
+    # If handlers are available in the project, leverage them
+    from app.handlers import COMMANDS as HANDLERS  # type: ignore
+except Exception:
+    # Fallback to empty mapping when handlers are not present in the environment
+    HANDLERS: Dict[str, Callable[..., str]] = {}
+
+from app.suggestions import suggest_command, VALID_COMMANDS
 
 
-def show_help() -> str:
-    """
-    Return formatted help text with all available commands
-    grouped by category.
-    """
-    help_text = """
-╔════════════════════════════════════╗
-║  ПЕРСОНАЛЬНИЙ ПОМІЧНИК - ДОВІДКА   ║
-╚════════════════════════════════════╝
-
-📞 КОНТАКТИ:
-  add [ім'я] [телефон]               - Додати контакт або телефон
-  change [ім'я] [старий] [новий]     - Змінити телефон контакту
-  delete [ім'я]                      - Видалити контакт
-  phone [ім'я]                       - Показати телефони контакту
-  all                                - Показати всі контакти
-  search [запит]                     - Пошук контактів (ім'я/телефон)
-  add-email [ім'я] [email]           - Додати email до контакту
-  add-address [ім'я] [адреса]        - Додати адресу до контакту
-
-🎂 ДНІ НАРОДЖЕННЯ:
-  add-birthday [ім'я] [дата]         - Додати день народження (DD.MM.YYYY)
-  show-birthday [ім'я]               - Показати день народження контакту
-  birthdays [днів]                   - Майбутні дні народження (за замовчуванням 7)
-
-📝 НОТАТКИ:
-  add-note [title] [text]            - Додати нотатку
-  show-notes                         - Показати всі нотатки
-  find-note [запит]                  - Пошук нотаток за текстом/тегами
-  edit-note [title] [new text]       - Редагувати нотатку
-  delete-note [title]                - Видалити нотатку
-
-🔧 ІНШЕ:
-  hello                              - Привітання
-  help                               - Показати цю довідку
-  exit | close | quit                - Вийти з програми (зі збереженням даних)
-"""
-    return help_text.strip()
+def parse_input(user_input: str) -> Tuple[str, str]:
+    """Split user input into (command, args_as_string)."""
+    normalized = user_input.strip()
+    if not normalized:
+        return "", ""
+    parts = normalized.split(maxsplit=1)
+    command = parts[0].lower()
+    args = parts[1] if len(parts) > 1 else ""
+    return command, args
 
 
 def main() -> None:
-    """
-    Entry point for CLI personal assistant.
-
-    - Loads data on start
-    - Runs main input loop
-    - Dispatches commands to handlers
-    - Saves data on exit
-    """
-    # Load data (contacts + notebook)
-    contacts, notebook = load_data()  # type: ignore[assignment]
-    print("Вітаємо у Персональному Помічнику!")
-    print("Введіть 'help', щоб побачити список команд.\n")
-
+    print("Вітаю! Це персональний помічник. Введіть команду або 'help'.")
     while True:
-        user_input = input("Введіть команду: ").strip()
-
-        # Skip empty input
-        if not user_input:
-            continue
-
-        command, args = parse_input(user_input)
-
-        # System / exit commands
-        if command in ("exit", "close", "quit"):
-            save_data(contacts, notebook)
-            print("До побачення! Дані збережено.")
+        try:
+            raw = input(">>> ")
+        except (EOFError, KeyboardInterrupt):
+            print("\nДо зустрічі!")
             break
 
-        if command == "hello":
-            print("Привіт! Чим я можу допомогти?")
+        command, args = parse_input(raw)
+        if not command:
             continue
 
-        if command == "help":
-            print(show_help())
+        # Exit/close aliases handled early
+        if command in {"exit", "close", "quit"} or raw.lower() in {"good bye", "goodbye"}:
+            print("До зустрічі!")
+            break
+
+        # If we have real handlers mapping, use it; otherwise, only provide suggestions
+        if command in HANDLERS:
+            try:
+                handler = HANDLERS[command]
+                result = handler(args) if args else handler()
+                if result is not None:
+                    print(result)
+            except Exception as exc:
+                print(f"Помилка виконання команди: {exc}")
             continue
 
-        # Contact-related commands via handlers dict
-        if command in CONTACT_HANDLERS:
-            handler = CONTACT_HANDLERS[command]
-            result = handler(args, contacts)
-            if result:
-                print(result)
-            continue
-        # Unknown command
-        print("Невідома команда. Введіть 'help', щоб побачити доступні команди.")
+        # Unknown command branch → suggest close matches
+        suggestions = suggest_command(command)
+        if suggestions:
+            hint = ", ".join(suggestions)
+            print(f"💡 Можливо: {hint}?")
+        else:
+            # If nothing close, show a generic help tip with known commands
+            print("Невідома команда. Спробуйте 'help' або одну з відомих команд:")
+            print(", ".join(sorted(set(VALID_COMMANDS))))
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as err:
+        print(f"Фатальна помилка: {err}", file=sys.stderr)
+        sys.exit(1)
+
+
