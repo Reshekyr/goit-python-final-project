@@ -66,6 +66,27 @@ class Note:
             tags_line = f"Tags: {', '.join(self.tags)}"
             return f"{header_line}\n{body_line}\n{tags_line}"
         return f"{header_line}\n{body_line}"
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the note to a dictionary.
+        """
+        return {
+            "title": self.title,
+            "content": self.content,
+            "created_at": self.created_at.strftime("%d.%m.%Y %H:%M"),
+            "tags": self.tags,
+        }
+    
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Note":
+        """
+        Create a note from a dictionary.
+        """
+        note = Note(data["title"], data["content"])
+        note.created_at = datetime.strptime(data["created_at"], "%d.%m.%Y %H:%M")
+        note.tags = data["tags"]
+        return note
 
 class Field:
     def __init__(self, value):
@@ -286,6 +307,24 @@ class Notebook:
         # Remove leading and trailing whitespace
         super().__init__(value.strip())
 
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the address to a dictionary.
+        """
+        return {
+            "notes": [note.to_dict() for note in self.notes],
+        }
+    
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Notebook":
+        """
+        Create a notebook from a dictionary.
+        """
+        notebook = Notebook()
+        for note_data in data["notes"]:
+            note = Note.from_dict(note_data)
+            notebook.add_note(note)
+            
 class Phone(Field):
     """Class Phone with normalize and validation func."""
     
@@ -565,6 +604,25 @@ class AddressBook(UserDict):
         fields += [self._normalize_value(address) for address in addresses]
 
         return fields
+      
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the address book to a dictionary.
+        """
+        return {
+            "contacts": [record.to_dict() for record in self.data.values()],
+        }
+    
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "AddressBook":
+        """
+        Create an address book from a dictionary.
+        """
+        address_book = AddressBook()
+        for record_data in data["contacts"]:
+            record = Record.from_dict(record_data)
+            address_book.add_record(record)
+        return address_book
 
 class Email(Field):
     def __init__(self):
@@ -809,4 +867,28 @@ class Record:
             lines.append(f"Birthday: {birthday_str}")
 
         return "\n".join(lines)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the contact to a dictionary.
+        """
+        return {
+            "name": self.name.value,
+            "phones": [phone.value for phone in self.phones],
+            "emails": [email.value for email in self.emails],
+            "addresses": [address.value for address in self.addresses],
+            "birthday": self.birthday.value.strftime("%d.%m.%Y") if self.birthday else None,
+        }
+    
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> "Record":
+        """
+        Create a contact from a dictionary.
+        """
+        record = Record(data["name"])
+        record.phones = [Phone(phone) for phone in data["phones"]]
+        record.emails = [Email(email) for email in data["emails"]]
+        record.addresses = [Address(address) for address in data["addresses"]]
+        record.birthday = Birthday(data["birthday"]) if data["birthday"] else None
+        return record
 

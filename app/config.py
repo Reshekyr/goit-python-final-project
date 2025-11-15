@@ -22,3 +22,10 @@ VALID_COMMANDS = [
     "exit"
 ]
 N_CLOSE_MATCHES = 1
+
+
+#===
+# JSON persistence configuration
+#===
+ADDRESSBOOK_FILE = "addressbook.json"
+NOTEBOOK_FILE = "notebook.json"
