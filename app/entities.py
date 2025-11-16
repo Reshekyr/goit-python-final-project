@@ -637,7 +637,7 @@ class Email(Field):
     def __init__(self, email):
         is_email_valid = self.is_valid_email(email)
         if not is_email_valid:
-            raise ValueError("Invalid email address.")
+            raise ValueError("❌ Некоректна імейл-адреса.")
         super().__init__(email)
 
     def is_valid_email(self, email):

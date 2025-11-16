@@ -36,6 +36,11 @@ VALID_COMMANDS = [
     "all",
     "add-birthday",
     "birthdays",
+    "show-birthday",
+    "search",
+    "delete",
+    "add-email",
+    "add-address",
     # Notes
     "add-note",
     "find-note",
@@ -46,6 +51,11 @@ VALID_COMMANDS = [
     "hello",
     "close",
     "exit",
+    # tags
+    "add-tag",
+    "find-by-tag",
+    "show-tags",
+    "sort-by-tags",
 ]
 N_CLOSE_MATCHES = 1
 

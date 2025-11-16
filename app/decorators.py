@@ -6,14 +6,14 @@ def input_error(func: callable) -> callable:
         try:
             return func(*args, **kwargs)
         except ValueError:
-            return "Невалідні дані: перевірте введені дані"
+            return "❌ Невалідні дані: перевірте введені дані"
         except IndexError:
-            return "Недостатньо аргументів для виконання команди"
+            return "❌ Недостатньо аргументів для виконання команди"
         except KeyError:
-            return "Контакт/нотатка  з таким іменем не знайдена"
+            return "❌ Контакт/нотатка  з таким іменем не знайдена"
         except AttributeError:
-            return "Помилка доступу до атрибута"
+            return "❌ Помилка доступу до атрибута"
         except Exception:
-            return "Сталася несподівана помилка. Спробуйте пізніше"
+            return "❌ Сталася несподівана помилка. Спробуйте пізніше"
 
     return wrapper
