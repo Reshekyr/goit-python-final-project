@@ -10,7 +10,7 @@ def hello(*_) -> str:
     """
     Returns a greeting message.
     """
-    return "How can I help you?"
+    return "Чим можу тобі допомогти?"
 
 
 # --------------------------------
@@ -26,7 +26,7 @@ def add_birthday(args: List[str], contacts) -> str:
     Date format: DD.MM.YYYY
     """
     if len(args) < 2:
-        raise ValueError("Please provide a name and date in the format DD.MM.YYYY")
+        raise ValueError("Будь ласка, введіть ім'я та дату у форматі DD.MM.YYYY")
 
     contact_name, date_str = args[0], args[1]
 
@@ -36,7 +36,7 @@ def add_birthday(args: List[str], contacts) -> str:
 
     # Validation happens inside the Birthday class/add_birthday method
     record.add_birthday(date_str)
-    return f"Birthday added to contact {contact_name}"
+    return f"✅ День народження додано до контакту {contact_name}"
 
 
 @input_error
@@ -48,16 +48,16 @@ def show_birthday(args: List[str], contacts) -> str:
         show-birthday [name]
     """
     if not args:
-        raise ValueError("Please provide a name of a contact")
+        raise ValueError("Будь ласка, надайте ім'я контакту")
 
     contact_name = args[0]
     record = contacts.find(contact_name)
     if record is None:
-        raise ValueError(f"Contact '{contact_name}' not found")
+        raise ValueError(f"Контакт '{contact_name}' не знайдено")
 
     bday_str = record.show_birthday()
 
-    return f"Birthday of {contact_name}: {bday_str}"
+    return f"День народження {contact_name}: {bday_str}"
 
 
 @input_error
@@ -75,9 +75,9 @@ def birthdays(args: List[str], contacts) -> str:
 
     upcoming = contacts.get_upcoming_birthdays(days)
     if not upcoming:
-        return "No birthdays in the upcoming period"
+        return "Немає днів народження у найближчий період"
 
-    lines: List[str] = [f"Birthdays in the next {days} days:"]
+    lines: List[str] = [f"Дні народження протягом наступних {days} днів:"]
     for item in upcoming:
         # Expected structure: {'name', 'birthday', 'congratulation_date'}
         name = item.get("name")
@@ -109,7 +109,7 @@ def add_note(args: List[str], contacts) -> str:
         add-note [name] [title] [text...]
     """
     if len(args) < 2:
-        raise ValueError("Please provide a title and content of the note")
+        raise ValueError("Будь ласка, вкажіть заголовок та вміст нотатки")
 
     name = args[0]
     record = contacts.find(name)
@@ -135,13 +135,13 @@ def show_notes(args: List[str], contacts) -> str:
     notebook = record.notebook
     all_notes = notebook.show_all()
     if not all_notes:
-        return "No notes"
+        return "Нотатки відсутні"
 
     lines: List[str] = [f"All notes ({len(all_notes)}):"]
     separator = "—" * 3
 
     for n in all_notes:
-        # Підтримка різних форматів: об'єкт нотатки або рядок/словник
+        # Support for different formats: note object or string/dictionary
         if hasattr(n, "created_at") and hasattr(n, "title") and hasattr(n, "content"):
             created = getattr(n, "created_at")
             created_str = (
@@ -156,7 +156,7 @@ def show_notes(args: List[str], contacts) -> str:
             title = n.get("title", "")
             content = n.get("content", "")
         else:
-            # Фолбек: перетворити в рядок
+            # Fallback: convert to string
             created_str = ""
             title = str(n)
             content = ""
@@ -179,7 +179,7 @@ def find_note(args: List[str], contacts) -> str:
         find-note [keyword]
     """
     if not args:
-        raise ValueError("Please provide a keyword for the search")
+        raise ValueError("Будь ласка, надайте ключове слово для пошуку")
     name = args[0]
     keyword = args[1]
     record = contacts.find(name)
@@ -187,7 +187,7 @@ def find_note(args: List[str], contacts) -> str:
     results = notebook.search_notes(keyword)
 
     if not results:
-        return "Nothing found"
+        return "Нічого не знайдено"
 
     lines: List[str] = [f"Found {len(results)} notes:"]
     for n in results:
@@ -209,14 +209,14 @@ def edit_note(args: List[str], contacts) -> str:
         edit-note [title] [new_text...]
     """
     if len(args) < 2:
-        raise ValueError("Please provide a title and new text")
+        raise ValueError("Будь ласка, вкажіть заголовок та новий текст")
     name = args[0]
     title = args[1]
     new_content = " ".join(args[2:])
     record = contacts.find(name)
     notebook = record.notebook
     notebook.edit_note(title, new_content)
-    return f"Note '{title}' updated"
+    return f"Нотатка '{title}' оновлена"
 
 
 @input_error
@@ -228,13 +228,13 @@ def delete_note(args: List[str], contacts) -> str:
         delete-note [title]
     """
     if not args:
-        raise ValueError("Please provide a title of the note")
+        raise ValueError("Будь ласка, вкажіть заголовок нотатки")
     name = args[0]
     title = args[1]
     record = contacts.find(name)
     notebook = record.notebook
     notebook.delete_note(title)
-    return f"Note '{title}' deleted"
+    return f"Нотатка '{title}' видалена"
 
 
 # ---------------------------
@@ -249,14 +249,14 @@ def add_tag(args: List[str], contacts) -> str:
         add-tag [title] [tag]
     """
     if len(args) < 2:
-        raise ValueError("Please provide a title and tag of the note")
+        raise ValueError("Будь ласка, вкажіть заголовок нотатки та тег")
 
     name, title, tag = args[0], args[1], args[2]
     record = contacts.find(name)
     notebook = record.notebook
     note = notebook.find_note(title)
     note.add_tag(tag)
-    return f"Tag '{tag}' added to note '{title}'"
+    return f"Тег '{tag}' додано до нотатки '{title}'"
 
 
 @input_error
@@ -268,16 +268,16 @@ def find_by_tag(args: List[str], contacts) -> str:
         find-by-tag [tag]
     """
     if not args:
-        raise ValueError("Please provide a tag")
+        raise ValueError("Будь ласка, вкажіть тег для пошуку")
     name = args[0]
     tag = args[1]
     record = contacts.find(name)
     notebook = record.notebook
     results = notebook.find_by_tag(tag)
     if not results:
-        return "Nothing found"
+        return "Нічого не знайдено"
 
-    lines: List[str] = [f"Found {len(results)} notes:"]
+    lines: List[str] = [f"Знайдено {len(results)} нотатки:"]
     for n in results:
         lines.append(f"   {n.title}")
     return "\n".join(lines)
@@ -296,7 +296,7 @@ def show_tags(args: List[str], contacts) -> str:
     notebook = record.notebook
     tags = notebook.get_all_tags()
     if not tags:
-        return "No tags"
+        return "Немає тегів"
     return "Tags: " + ", ".join(sorted(tags))
 
 
@@ -309,13 +309,13 @@ def sort_by_tags(args: List[str], contacts) -> str:
         sort-by-tags [tag1] [tag2] ...
     """
     if not args:
-        raise ValueError("Please provide at least one tag")
+        raise ValueError("Будь ласка, вкажіть принаймні один тег для сортування")
     name = args[0]
     record = contacts.find(name)
     notebook = record.notebook
     sorted_notes = notebook.sort_by_tags(args[1:])
     if not sorted_notes:
-        return "No notes found"
+        return "Нотатки відсутні"
 
     lines: List[str] = ["Sorted notes:"]
     for n in sorted_notes:
@@ -332,7 +332,7 @@ def sort_by_tags(args: List[str], contacts) -> str:
 def add_contact(args: list[str], contacts: AddressBook) -> str:
     """Add a new contact or phone to existing contact"""
     if len(args) < 2:
-        raise ValueError("Not enough arguments. Usage: add [name] [phone]")
+        raise ValueError("Недостатньо аргументів. Usage: add [name] [phone]")
 
     contact_name, contact_phone_number = args[0], args[1]
     record = contacts.find(contact_name)
@@ -341,27 +341,27 @@ def add_contact(args: list[str], contacts: AddressBook) -> str:
         contacts.add_record(record)
 
     record.add_phone(contact_phone_number)
-    return f"✅ Contact {contact_name} added successfully"
+    return f"✅ Контакт {contact_name} додано успішно"
 
 
 @input_error
 def get_phone(args: list[str], contacts: AddressBook) -> str:
     """Show all phones of a contact"""
     if len(args) < 1:
-        raise ValueError("Not enough arguments. Usage: phone [name]")
+        raise ValueError("Недостатньо аргументів. Usage: phone [name]")
 
     contact_name = args[0]
     record = contacts.find(contact_name)
 
     if record is None:
-        raise KeyError(f"❌ Contact {contact_name} not found")
+        raise KeyError(f"❌ Контакт {contact_name} не знайдено")
 
     if not record.phones:
-        return f"📭 Contact {contact_name} has no phones"
+        return f"📭 Контакт {contact_name} немає телефонів"
 
     phones_str = ", ".join(phone.value for phone in record.phones)
     plural = "s" if len(record.phones) > 1 else ""
-    return f"📞 Contact {contact_name} phone number{plural}: {phones_str}"
+    return f"📞 Контакт {contact_name} телефон {plural}: {phones_str}"
 
 
 @input_error
@@ -370,19 +370,19 @@ def get_all(_: list[str], contacts: AddressBook) -> str:
     result: list[str] = []
 
     if not contacts.data:
-        return "📭 No contacts found"
+        return "📭 Контакти не знайдено"
 
     for contact_name, record in contacts.data.items():
         # Phones
         phones_str = (
             ", ".join(phone.value for phone in record.phones)
             if record.phones
-            else "no phones"
+            else "телефони відсутні"
         )
 
         # Birthday
         birthday_str = (
-            f" - Birthday: {record.birthday.value.strftime('%d.%m.%Y')}"
+            f" - BiДrthday: {record.birthday.value.strftime('%d.%m.%Y')}"
             if record.birthday and record.birthday.value
             else ""
         )
@@ -412,15 +412,15 @@ def get_all(_: list[str], contacts: AddressBook) -> str:
 def search_contacts(args: list, contacts: AddressBook) -> str:
     """Search contacts by name or phone number"""
     if len(args) < 1:
-        raise ValueError("Not enough arguments. Usage: search [query]")
+        raise ValueError("Недостатньо аргументів. Usage: search [query]")
 
     query = args[0]
     results = contacts.search(query)
 
     if not results:
-        return f"🔍 Nothing found for query '{query}'"
+        return f"🔍 За вашим запитом нічого не знайдено '{query}'"
 
-    result_lines = [f"🔍 Found contacts: {len(results)}"]
+    result_lines = [f"🔍 Знайдено контактів: {len(results)}"]
 
     for record in results:
         phones = [phone.value for phone in record.phones]
@@ -435,7 +435,7 @@ def change_phone(args: list[str], contacts: AddressBook) -> str:
     """Change phone number of existing contact"""
     if len(args) < 3:
         raise ValueError(
-            "Not enough arguments. Usage: change [name] [old_phone] [new_phone]"
+            "Недостатньо аргументів. Usage: change [name] [old_phone] [new_phone]"
         )
 
     contact_name, old_phone_number, new_phone_number = args[0], args[1], args[2]
@@ -445,10 +445,10 @@ def change_phone(args: list[str], contacts: AddressBook) -> str:
         raise KeyError(f"❌ Contact {contact_name} not found")
 
     if record.edit_phone(old_phone_number, new_phone_number):
-        return f"✅ Contact {contact_name} updated successfully"
+        return f"✅ Контакт {contact_name} успішно оновлено"
     else:
         raise ValueError(
-            f"Phone {old_phone_number} not found for contact {contact_name}"
+            f"Телефон {old_phone_number} не знайдено до контакту {contact_name}"
         )
 
 
@@ -456,46 +456,46 @@ def change_phone(args: list[str], contacts: AddressBook) -> str:
 def delete_contact(args: list, contacts: AddressBook) -> str:
     """Delete a contact by name"""
     if len(args) < 1:
-        raise ValueError("Not enough arguments. Usage: delete [name]")
+        raise ValueError("Недостатньо аргументів. Usage: delete [name]")
 
     name = args[0]
     record = contacts.find(name)
 
     if record is None:
-        raise KeyError(f"❌ Contact {name} not found")
+        raise KeyError(f"❌ Контакт {name} не знайдено")
 
     contacts.delete(name)
-    return f"✅ Contact {name} deleted"
+    return f"✅ Контакт {name} видалено успішно"
 
 
 @input_error
 def add_email(args: list, contacts: AddressBook) -> str:
     """Add email to existing contact"""
     if len(args) < 2:
-        raise ValueError("Not enough arguments. Usage: add-email [name] [email]")
+        raise ValueError("Недостатньо аргументів. Usage: add-email [name] [email]")
 
     name, email = args[0], args[1]
     record = contacts.find(name)
 
     if record is None:
-        raise KeyError(f"❌ Contact {name} not found")
+        raise KeyError(f"❌ Контакт {name} не знайдено")
 
     record.add_email(email)
-    return f"✅ Email added to contact {name}"
+    return f"✅ Email успішно додано до контакту {name}"
 
 
 @input_error
 def add_address(args: list, contacts: AddressBook) -> str:
     """Add address to existing contact"""
     if len(args) < 2:
-        raise ValueError("Not enough arguments. Usage: add-address [name] [address...]")
+        raise ValueError("Недостатньо аргументів. Usage: add-address [name] [address...]")
 
     name = args[0]
     address = " ".join(args[1:])
     record = contacts.find(name)
 
     if record is None:
-        raise KeyError(f"❌ Contact {name} not found")
+        raise KeyError(f"❌ Контакт {name} не знайдено")
 
     record.add_address(address)
-    return f"✅ Address added to contact {name}"
+    return f"✅ Адреса додана успішно до контакту {name}"
