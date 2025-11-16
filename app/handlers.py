@@ -6,7 +6,7 @@ from app.entities import AddressBook, Record, Note
 # -----------------------------
 # Basic helper/utility handlers
 # -----------------------------
-def hello(_) -> str:
+def hello(*_) -> str:
     """
     Returns a greeting message.
     """
