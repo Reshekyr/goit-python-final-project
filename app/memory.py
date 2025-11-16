@@ -64,9 +64,6 @@ def load_data() -> Tuple[Any, Any]:
         JSONDecodeError: If the address book file is not valid JSON
         Exception: If there is an error loading the data
     """
-    # Load AddressBook
-    book_obj: Any
-    contacts_loaded = 0
     try:
         with open(ADDRESSBOOK_FILE, "r", encoding="utf-8") as f:
             book_data = json.load(f)
@@ -84,9 +81,6 @@ def load_data() -> Tuple[Any, Any]:
         book_obj = AddressBook() if isinstance(AddressBook, type) else {}
         print(f"Помилка читання '{ADDRESSBOOK_FILE}': {e}. Створено порожню адресну книгу.")
 
-    # Load Notebook
-    notebook_obj: Any
-    notes_loaded = 0
     try:
         with open(NOTEBOOK_FILE, "r", encoding="utf-8") as f:
             nb_data = json.load(f)

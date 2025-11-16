@@ -1,10 +1,8 @@
 
 
-from collections import defaultdict
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List
 from decorators import input_error
-from entities import AddressBook, Record
-
+from entities import AddressBook, Record, Note
 
 
 # -----------------------------
@@ -453,44 +451,3 @@ def add_address(args: list, contacts: AddressBook) -> str:
     
     record.add_address(address)
     return f"✅ Address added to contact {name}"
-
-
-
-
-
-# ----------------
-# Handlers mapping
-# ----------------
-handlers: Dict[str, Callable] = {
-    # base
-    "hello": hello,
-    
-    # birthdays
-    "add-birthday": add_birthday,
-    "show-birthday": show_birthday,
-    "birthdays": birthdays,
-    
-    # notes
-    "add-note": add_note,
-    "show-notes": show_notes,
-    "find-note": find_note,
-    "edit-note": edit_note,
-    "delete-note": delete_note,
-    
-    # tags (extra)
-    "add-tag": add_tag,
-    "find-by-tag": find_by_tag,
-    "show-tags": show_tags,
-    "sort-by-tags": sort_by_tags,
-  
-     # contacts  
-    "add": add_contact,
-    "phone": get_phone,
-    "all": get_all,
-    "search": search_contacts,
-    "change": change_phone,
-    "delete": delete_contact,
-    "add-email": add_email,
-    "add-address": add_address,
-}
-

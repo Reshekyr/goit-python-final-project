@@ -1,17 +1,13 @@
 
 import sys
-from typing import Callable, Dict, Tuple
+from typing import Tuple
 from app.utils import parse_input
 from app.handlers import handlers
 
-try:
-    # If handlers are available in the project, leverage them
-    from app.handlers import COMMANDS as HANDLERS  # type: ignore
-except Exception:
-    # Fallback to empty mapping when handlers are not present in the environment
-    HANDLERS: Dict[str, Callable[..., str]] = {}
+#TODO
+from app.suggestions import suggest_command
 
-from app.suggestions import suggest_command, VALID_COMMANDS
+from app.config import VALID_COMMANDS
 
 
 def parse_input(user_input: str) -> Tuple[str, str]:
@@ -44,25 +40,24 @@ def main() -> None:
             break
 
         # If we have real handlers mapping, use it; otherwise, only provide suggestions
-        if command in HANDLERS:
+        if command in handlers:
             try:
-                handler = HANDLERS[command]
+                handler = handlers[command]
                 result = handler(args) if args else handler()
                 if result is not None:
                     print(result)
             except Exception as exc:
                 print(f"Помилка виконання команди: {exc}")
-            continue
-
-        # Unknown command branch → suggest close matches
-        suggestions = suggest_command(command)
-        if suggestions:
-            hint = ", ".join(suggestions)
-            print(f"💡 Можливо: {hint}?")
         else:
-            # If nothing close, show a generic help tip with known commands
-            print("Невідома команда. Спробуйте 'help' або одну з відомих команд:")
-            print(", ".join(sorted(set(VALID_COMMANDS))))
+            # Unknown command branch → suggest close matches
+            suggestions = suggest_command(command)
+            if suggestions:
+                hint = ", ".join(suggestions)
+                print(f"💡 Можливо: {hint}?")
+            else:
+                # If nothing close, show a generic help tip with known commands
+                print("Невідома команда. Спробуйте 'help' або одну з відомих команд:")
+                print(", ".join(sorted(set(VALID_COMMANDS))))
 
 
 if __name__ == "__main__":
