@@ -627,101 +627,19 @@ class AddressBook(UserDict):
 
 
 class Email(Field):
-    def __init__(self):
-        self.contacts_database = []
-        self.pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    def __init__(self, email):
+        is_email_valid = self.is_valid_email(email)
+        if not is_email_valid:
+            raise ValueError("Invalid email address.")
+        super().__init__(email)
 
-    def _load_data(self):
-        return []
-
-    def _save_data(self):
-        pass
 
     def is_valid_email(self, email):
         return bool(re.match(self.pattern, email))
 
-    def add_email(self, email):
-        if not isinstance(email, str):
-            print(f"[!] Некоректний тип даних.")
-            return
 
-        if not self.is_valid_email(email):
-            print(f"[!] '{email}' не є дійсною адресою.")
-            return
 
-        if email in self.contacts_database:
-            print(f"[!] '{email}' вже присутній у списку.")
-            return
-
-        self.contacts_database.append(email)
-        print(f"[+] '{email}' успішно додано.")
-        self._save_data()
-
-    def display_emails(self):
-        print("\n--- Список Email Адрес ---")
-        if not self.contacts_database:
-            print("Список порожній.")
-        else:
-            for index, email in enumerate(self.contacts_database):
-                print(f"{index}: {email}")
-        print("--------------------------")
-
-    def delete_email_by_index(self):
-        self.display_emails()
-        if not self.contacts_database:
-            return
-
-        try:
-            index_str = input("Введіть номер email, який потрібно видалити (або 'q' для скасування): ")
-            if index_str.lower() == 'q':
-                print("[i] Видалення скасовано.")
-                return
-
-            index = int(index_str)
-
-            if 0 <= index < len(self.contacts_database):
-                removed_email = self.contacts_database.pop(index)
-                print(f"[+] '{removed_email}' (індекс {index}) успішно видалено.")
-                self._save_data()  # Цей виклик тепер нічого не робить
-            else:
-                print(
-                    f"[!] Некоректний індекс. Будь ласка, введіть порядковий номер від 0 до {len(self.contacts_database) - 1}.")
-        except ValueError:
-            print("[!] Некоректний ввід. Будь ласка, введіть потрібний порядковий номер для вибору.")
-
-    def edit_email_by_index(self):
-        self.display_emails()
-        if not self.contacts_database:
-            return
-
-        try:
-            index_str = input("Введіть порядковий номер email, який потрібно редагувати (або 'q' для скасування): ")
-            if index_str.lower() == 'q':
-                print("[i] Редагування скасовано.")
-                return
-
-            index = int(index_str)
-
-            if 0 <= index < len(self.contacts_database):
-                old_email = self.contacts_database[index]
-                new_email = input(f"Введіть нову адресу для '{old_email}': ")
-
-                if not self.is_valid_email(new_email):
-                    print(f"[!] '{new_email}' не є дійсною адресою. Залишено стару адресу.")
-                    return
-
-                if new_email in self.contacts_database:
-                    print(f"[!] '{new_email}' вже присутній у списку. Залишено стару адресу.")
-                    return
-
-                self.contacts_database[index] = new_email
-                print(f"[+] Email оновлено: '{old_email}' -> '{new_email}'.")
-                self._save_data()
-
-            else:
-                print(f"[!] Некоректний індекс. Будь ласка, введіть число від 0 до {len(self.contacts_database) - 1}.")
-        except ValueError:
-            print("[!] Некоректний ввід. Будь ласка, введіть ціле число.")
 
 
 class Record:

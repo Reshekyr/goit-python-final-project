@@ -1,6 +1,8 @@
 
 import sys
 from typing import Tuple
+
+from app.memory import load_data, save_data
 from app.utils import parse_input
 from app.config import handlers
 
@@ -21,7 +23,7 @@ def parse_input(user_input: str) -> Tuple[str, str]:
 
 
 def main() -> None:
-    print("Вітаю! Це персональний помічник. Введіть команду або 'help'.")
+    print("Вітаю! Це персональний помічник. Введіть команду.")
     while True:
         try:
             raw = input(">>> ")
@@ -30,6 +32,7 @@ def main() -> None:
             break
 
         command, args = parse_input(raw)
+        address_book, notebook = load_data()
         if not command:
             continue
 
@@ -57,6 +60,7 @@ def main() -> None:
                 # If nothing close, show a generic help tip with known commands
                 print("Невідома команда. Спробуйте 'help' або одну з відомих команд:")
                 print(", ".join(sorted(set(VALID_COMMANDS))))
+        save_data(address_book, notebook)
 
 
 if __name__ == "__main__":

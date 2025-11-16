@@ -1,19 +1,18 @@
 
 
-from typing import Callable, Dict, List
-from decorators import input_error
-from entities import AddressBook, Record, Note
+from typing import List
+from app.decorators import input_error
+from app.entities import AddressBook, Record, Note
 
 
 # -----------------------------
 # Basic helper/utility handlers
 # -----------------------------
-def hello(_: List[str], __) -> str:
+def hello() -> str:
     """
     Returns a greeting message.
     """
     return "How can I help you?"
-
 
 # --------------------------------
 # Contacts: birthdays functionality

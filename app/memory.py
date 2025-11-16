@@ -15,12 +15,12 @@ def _count_from_dict(data: Dict[str, Any], key: str) -> int:
     return 0
 
 
-def save_data(book: Any, notebook: Any) -> None:
+def save_data(address_book: Any, notebook: Any) -> None:
     """
     Save address book and notebook to JSON files.
     
     Args:
-        book: AddressBook object
+        address_book: AddressBook object
         notebook: Notebook object
 
     Returns:
@@ -33,7 +33,7 @@ def save_data(book: Any, notebook: Any) -> None:
     """
     # Save AddressBook
     try:
-        book_dict = book.to_dict() if hasattr(book, "to_dict") else {}
+        book_dict = address_book.to_dict() if hasattr(address_book, "to_dict") else {}
         count_contacts = _count_from_dict(book_dict if isinstance(book_dict, dict) else {}, "contacts")
         with open(ADDRESSBOOK_FILE, "w", encoding="utf-8") as f:
             json.dump(book_dict, f, ensure_ascii=False, indent=2)
@@ -68,34 +68,34 @@ def load_data() -> Tuple[Any, Any]:
         with open(ADDRESSBOOK_FILE, "r", encoding="utf-8") as f:
             book_data = json.load(f)
         # Recreate object using from_dict if available
-        book_obj = AddressBook.from_dict(book_data)
-        contacts_loaded = len(book_obj.data)
+        address_book = AddressBook.from_dict(book_data)
+        contacts_loaded = len(address_book.data)
         print(f"Завантажено контактів: {contacts_loaded}")
     except FileNotFoundError:
-        book_obj = AddressBook() if isinstance(AddressBook, type) else {}
+        address_book = AddressBook() if isinstance(AddressBook, type) else {}
         print(f"ℹФайл '{ADDRESSBOOK_FILE}' не знайдено. Створено порожню адресну книгу.")
     except JSONDecodeError as e:
-        book_obj = AddressBook() if isinstance(AddressBook, type) else {}
+        address_book = AddressBook() if isinstance(AddressBook, type) else {}
         print(f"Помилка читання '{ADDRESSBOOK_FILE}': некоректний JSON ({e}). Створено порожню адресну книгу.")
     except Exception as e:
-        book_obj = AddressBook() if isinstance(AddressBook, type) else {}
+        address_book = AddressBook() if isinstance(AddressBook, type) else {}
         print(f"Помилка читання '{ADDRESSBOOK_FILE}': {e}. Створено порожню адресну книгу.")
 
     try:
         with open(NOTEBOOK_FILE, "r", encoding="utf-8") as f:
             nb_data = json.load(f)
-        notebook_obj = Notebook.from_dict(nb_data)
-        notes_loaded = len(notebook_obj._notes)
+        notebook = Notebook.from_dict(nb_data)
+        notes_loaded = len(notebook._notes)
         print(f"Завантажено нотаток: {notes_loaded}")
     except FileNotFoundError:
-        notebook_obj = Notebook() if isinstance(Notebook, type) else {} 
+        notebook = Notebook() if isinstance(Notebook, type) else {}
         print(f"Файл '{NOTEBOOK_FILE}' не знайдено. Створено порожній нотатник.")
     except JSONDecodeError as e:
-        notebook_obj = Notebook() if isinstance(Notebook, type) else {} 
+        notebook = Notebook() if isinstance(Notebook, type) else {}
         print(f"Помилка читання '{NOTEBOOK_FILE}': некоректний JSON ({e}). Створено порожній нотатник.")
     except Exception as e:
-        notebook_obj = Notebook() if isinstance(Notebook, type) else {} 
+        notebook = Notebook() if isinstance(Notebook, type) else {}
         print(f"Помилка читання '{NOTEBOOK_FILE}': {e}. Створено порожній нотатник.")
 
-    return book_obj, notebook_obj
+    return address_book, notebook
 

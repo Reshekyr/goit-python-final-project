@@ -1,6 +1,6 @@
 
 from difflib import get_close_matches
-from config import FUZZY_MATCH_CUTOFF, VALID_COMMANDS, N_CLOSE_MATCHES
+from app.config import FUZZY_MATCH_CUTOFF, VALID_COMMANDS, N_CLOSE_MATCHES
 
 def suggest_command(user_command: str) -> list[str]:
     """Return a similar command for the given user input."""
