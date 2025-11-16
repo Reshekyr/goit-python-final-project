@@ -382,7 +382,7 @@ def get_all(_: list[str], contacts: AddressBook) -> str:
 
         # Birthday
         birthday_str = (
-            f" - BiДrthday: {record.birthday.value.strftime('%d.%m.%Y')}"
+            f" - Birthday: {record.birthday.value.strftime('%d.%m.%Y')}"
             if record.birthday and record.birthday.value
             else ""
         )
