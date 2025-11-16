@@ -1,17 +1,11 @@
-
 import sys
-from typing import Callable, Dict, Tuple
+from typing import Tuple
+
+from app.memory import load_data, save_data
 from app.utils import parse_input
-from app.handlers import handlers
+from app.config import handlers, VALID_COMMANDS
 
-try:
-    # If handlers are available in the project, leverage them
-    from app.handlers import COMMANDS as HANDLERS  # type: ignore
-except Exception:
-    # Fallback to empty mapping when handlers are not present in the environment
-    HANDLERS: Dict[str, Callable[..., str]] = {}
-
-from app.suggestions import suggest_command, VALID_COMMANDS
+from app.utils import suggest_command
 
 
 def parse_input(user_input: str) -> Tuple[str, str]:
@@ -19,14 +13,15 @@ def parse_input(user_input: str) -> Tuple[str, str]:
     normalized = user_input.strip()
     if not normalized:
         return "", ""
-    parts = normalized.split(maxsplit=1)
+    parts = normalized.split()
     command = parts[0].lower()
-    args = parts[1] if len(parts) > 1 else ""
+    args = parts[1:] if len(parts) > 1 else ""
     return command, args
 
 
 def main() -> None:
-    print("Вітаю! Це персональний помічник. Введіть команду або 'help'.")
+    print("Вітаю! Це персональний помічник. Введіть команду.")
+    address_book = load_data()
     while True:
         try:
             raw = input(">>> ")
@@ -39,30 +34,30 @@ def main() -> None:
             continue
 
         # Exit/close aliases handled early
-        if command in {"exit", "close", "quit"} or raw.lower() in {"good bye", "goodbye"}:
+        if command in {"exit", "close", "quit"} or raw.lower() in {
+            "good bye",
+            "goodbye",
+        }:
             print("До зустрічі!")
             break
 
         # If we have real handlers mapping, use it; otherwise, only provide suggestions
-        if command in HANDLERS:
-            try:
-                handler = HANDLERS[command]
-                result = handler(args) if args else handler()
-                if result is not None:
-                    print(result)
-            except Exception as exc:
-                print(f"Помилка виконання команди: {exc}")
-            continue
-
-        # Unknown command branch → suggest close matches
-        suggestions = suggest_command(command)
-        if suggestions:
-            hint = ", ".join(suggestions)
-            print(f"💡 Можливо: {hint}?")
+        if command in handlers:
+            handler = handlers[command]
+            result = handler(args, address_book)
+            if result is not None:
+                print(result)
         else:
-            # If nothing close, show a generic help tip with known commands
-            print("Невідома команда. Спробуйте 'help' або одну з відомих команд:")
-            print(", ".join(sorted(set(VALID_COMMANDS))))
+            # Unknown command branch → suggest close matches
+            suggestions = suggest_command(command)
+            if suggestions:
+                hint = ", ".join(suggestions)
+                print(f"💡 Можливо: {hint}?")
+            else:
+                # If nothing close, show a generic help tip with known commands
+                print("Невідома команда. Спробуйте 'help' або одну з відомих команд:")
+                print(", ".join(sorted(set(VALID_COMMANDS))))
+    save_data(address_book)
 
 
 if __name__ == "__main__":
@@ -71,6 +66,3 @@ if __name__ == "__main__":
     except Exception as err:
         print(f"Фатальна помилка: {err}", file=sys.stderr)
         sys.exit(1)
-
-
-

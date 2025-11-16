@@ -4,7 +4,11 @@ from collections import UserDict
 from datetime import date, datetime, timedelta
 from typing import List, Optional, Dict, Any
 
+from app.exceptions import FutureDateError, InvalidDateFormatError
+
 """Notes module containing the Note class."""
+
+
 class Note:
     """Represents a single note with title, content, creation time, and tags.
 
@@ -14,11 +18,12 @@ class Note:
         created_at: The datetime when the note was created.
         tags: A list of lowercase tags without duplicates.
     """
+
     def __init__(self, title: str, content: str):
 
-        if not title or not title.strip():
+        if not title.strip():
             raise ValueError("title must not be empty")
-        if not content or not content.strip():
+        if not content.strip():
             raise ValueError("content must not be empty")
 
         self.title = title
@@ -54,8 +59,7 @@ class Note:
         try:
             self.tags.remove(normalized)
         except ValueError:
-            # Tag not present; ignore
-            pass
+            print("Tag is not present")
 
     def __str__(self) -> str:
         """Return a human-friendly string representation of the note."""
@@ -66,7 +70,7 @@ class Note:
             tags_line = f"Tags: {', '.join(self.tags)}"
             return f"{header_line}\n{body_line}\n{tags_line}"
         return f"{header_line}\n{body_line}"
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the note to a dictionary.
@@ -77,7 +81,7 @@ class Note:
             "created_at": self.created_at.strftime("%d.%m.%Y %H:%M"),
             "tags": self.tags,
         }
-    
+
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Note":
         """
@@ -88,6 +92,7 @@ class Note:
         note.tags = data["tags"]
         return note
 
+
 class Field:
     def __init__(self, value):
         self.value = value
@@ -95,14 +100,15 @@ class Field:
     def __str__(self):
         return str(self.value)
 
+
 class Phone(Field):
     """Class Phone with normalize and validation func."""
-    
+
     def __init__(self, value):
         cleaned_phone = self._clean_and_normalize_phone(value)
         self._validate_phone(cleaned_phone)
         super().__init__(cleaned_phone)
-    
+
     def _clean_and_normalize_phone(self, phone_number):
         """Clean and normalize phone number."""
         # Remove leading/trailing whitespace
@@ -117,7 +123,7 @@ class Phone(Field):
         else:
             # Other cases
             return phone_number
-    
+
     def _validate_phone(self, phone):
         """Validate cleaned phone number."""
         # Check length - exactly 10 digits
@@ -126,7 +132,7 @@ class Phone(Field):
                 f"Phone number must contain exactly 10 digits. "
                 f"Got {len(phone)} digits: '{phone}'"
             )
-            
+
 
 class Address(Field):
     """Class for storing contact address."""
@@ -173,7 +179,7 @@ class Notebook:
         """
         key = title.strip()
         if not key:
-            return None
+            return
         return self._notes.get(key)
 
     def delete_note(self, title):
@@ -292,7 +298,11 @@ class Notebook:
 
         scored = []
         for note in self._notes.values():
-            note_tags = {str(t).strip().lower() for t in (getattr(note, "tags", []) or []) if str(t).strip()}
+            note_tags = {
+                str(t).strip().lower()
+                for t in (getattr(note, "tags", []) or [])
+                if str(t).strip()
+            }
             matches = len(note_tags & query_tags)
             if matches > 0:
                 scored.append((matches, getattr(note, "title", ""), note))
@@ -300,21 +310,15 @@ class Notebook:
         # Sort by matches desc, then by title asc for deterministic ordering
         scored.sort(key=lambda x: (-x[0], x[1]))
         return [n for _, __, n in scored]
-        # Check that address is not empty
-        if not value or not value.strip():
-            raise ValueError("Address cannot be empty")
-
-        # Remove leading and trailing whitespace
-        super().__init__(value.strip())
 
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the address to a dictionary.
         """
         return {
-            "notes": [note.to_dict() for note in self.notes],
+            "notes": [note.to_dict() for note in self._notes],
         }
-    
+
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Notebook":
         """
@@ -324,15 +328,17 @@ class Notebook:
         for note_data in data["notes"]:
             note = Note.from_dict(note_data)
             notebook.add_note(note)
-            
+        return notebook
+
+
 class Phone(Field):
     """Class Phone with normalize and validation func."""
-    
+
     def __init__(self, value):
         cleaned_phone = self._clean_and_normalize_phone(value)
         self._validate_phone(cleaned_phone)
         super().__init__(cleaned_phone)
-    
+
     def _clean_and_normalize_phone(self, phone_number):
         """Clean and normalize phone number."""
         # Remove leading/trailing whitespace
@@ -347,7 +353,7 @@ class Phone(Field):
         else:
             # Other cases
             return phone_number
-    
+
     def _validate_phone(self, phone):
         """Validate cleaned phone number."""
         # Check length - exactly 10 digits
@@ -355,9 +361,9 @@ class Phone(Field):
             raise ValueError(
                 f"Phone number must contain exactly 10 digits. "
                 f"Got {len(phone)} digits: '{phone}'"
-            )        
+            )
 
-            
+
 class Birthday(Field):
     """Class for storing birthday with validation."""
 
@@ -365,10 +371,10 @@ class Birthday(Field):
         try:
             # Parse string into datetime object
             # Format: DD.MM.YYYY (e.g., 25.12.1990)
-            birthday = datetime.strptime(value, "%d.%m.%Y")
+            birthday = datetime.strptime(value, "%d.%m.%Y").date()
 
             # Check that date is not in the future
-            if birthday > datetime.now():
+            if birthday > datetime.today().date():
                 raise FutureDateError("Birthday cannot be in the future")
 
             # Store as datetime object (not string!)
@@ -541,7 +547,7 @@ class AddressBook(UserDict):
         :return: date if exists, otherwise None.
         """
         if not record.birthday:
-            return None
+            return
         return record.birthday.value
 
     @staticmethod
@@ -604,7 +610,7 @@ class AddressBook(UserDict):
         fields += [self._normalize_value(address) for address in addresses]
 
         return fields
-      
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the address book to a dictionary.
@@ -612,7 +618,7 @@ class AddressBook(UserDict):
         return {
             "contacts": [record.to_dict() for record in self.data.values()],
         }
-    
+
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "AddressBook":
         """
@@ -624,101 +630,19 @@ class AddressBook(UserDict):
             address_book.add_record(record)
         return address_book
 
+
 class Email(Field):
-    def __init__(self):
-        self.contacts_database = []
-        self.pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
-    def _load_data(self):
-        return []
-
-    def _save_data(self):
-        pass
+    def __init__(self, email):
+        is_email_valid = self.is_valid_email(email)
+        if not is_email_valid:
+            raise ValueError("❌ Некоректна імейл-адреса.")
+        super().__init__(email)
 
     def is_valid_email(self, email):
         return bool(re.match(self.pattern, email))
 
-    def add_email(self, email):
-        if not isinstance(email, str):
-            print(f"[!] Некоректний тип даних.")
-            return
-
-        if not self.is_valid_email(email):
-            print(f"[!] '{email}' не є дійсною адресою.")
-            return
-            
-        if email in self.contacts_database:
-            print(f"[!] '{email}' вже присутній у списку.")
-            return
-            
-        self.contacts_database.append(email)
-        print(f"[+] '{email}' успішно додано.")
-        self._save_data()
-
-    def display_emails(self):
-        print("\n--- Список Email Адрес ---")
-        if not self.contacts_database:
-            print("Список порожній.")
-        else:
-            for index, email in enumerate(self.contacts_database):
-                print(f"{index}: {email}")
-        print("--------------------------")
-
-    def delete_email_by_index(self):
-        self.display_emails()
-        if not self.contacts_database:
-            return
-
-        try:
-            index_str = input("Введіть номер email, який потрібно видалити (або 'q' для скасування): ")
-            if index_str.lower() == 'q':
-                print("[i] Видалення скасовано.")
-                return
-
-            index = int(index_str)
-
-            if 0 <= index < len(self.contacts_database):
-                removed_email = self.contacts_database.pop(index)
-                print(f"[+] '{removed_email}' (індекс {index}) успішно видалено.")
-                self._save_data() # Цей виклик тепер нічого не робить
-            else:
-                print(f"[!] Некоректний індекс. Будь ласка, введіть порядковий номер від 0 до {len(self.contacts_database)-1}.")
-        except ValueError:
-            print("[!] Некоректний ввід. Будь ласка, введіть потрібний порядковий номер для вибору.")
-
-    def edit_email_by_index(self):
-        self.display_emails()
-        if not self.contacts_database:
-            return
-
-        try:
-            index_str = input("Введіть порядковий номер email, який потрібно редагувати (або 'q' для скасування): ")
-            if index_str.lower() == 'q':
-                print("[i] Редагування скасовано.")
-                return
-
-            index = int(index_str)
-
-            if 0 <= index < len(self.contacts_database):
-                old_email = self.contacts_database[index]
-                new_email = input(f"Введіть нову адресу для '{old_email}': ")
-
-                if not self.is_valid_email(new_email):
-                    print(f"[!] '{new_email}' не є дійсною адресою. Залишено стару адресу.")
-                    return
-
-                if new_email in self.contacts_database:
-                    print(f"[!] '{new_email}' вже присутній у списку. Залишено стару адресу.")
-                    return
-
-                self.contacts_database[index] = new_email
-                print(f"[+] Email оновлено: '{old_email}' -> '{new_email}'.")
-                self._save_data()
-
-            else:
-                print(f"[!] Некоректний індекс. Будь ласка, введіть число від 0 до {len(self.contacts_database)-1}.")
-        except ValueError:
-            print("[!] Некоректний ввід. Будь ласка, введіть ціле число.")
 
 class Record:
     """
@@ -743,6 +667,7 @@ class Record:
         self.emails: List[Email] = []
         self.addresses: List[Address] = []
         self.birthday: Optional[Birthday] = None
+        self.notebook = Notebook()
 
     # ---------- phone methods ----------
 
@@ -832,7 +757,7 @@ class Record:
         :return: Formatted birthday string or None if birthday is not set.
         """
         if not self.birthday:
-            return None
+            return
         return self.birthday.value.strftime("%d.%m.%Y")
 
     # ---------- representation ----------
@@ -867,7 +792,7 @@ class Record:
             lines.append(f"Birthday: {birthday_str}")
 
         return "\n".join(lines)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert the contact to a dictionary.
@@ -877,9 +802,12 @@ class Record:
             "phones": [phone.value for phone in self.phones],
             "emails": [email.value for email in self.emails],
             "addresses": [address.value for address in self.addresses],
-            "birthday": self.birthday.value.strftime("%d.%m.%Y") if self.birthday else None,
+            "birthday": (
+                self.birthday.value.strftime("%d.%m.%Y") if self.birthday else None
+            ),
+            "notebook": self.notebook.to_dict(),
         }
-    
+
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "Record":
         """
@@ -890,5 +818,10 @@ class Record:
         record.emails = [Email(email) for email in data["emails"]]
         record.addresses = [Address(address) for address in data["addresses"]]
         record.birthday = Birthday(data["birthday"]) if data["birthday"] else None
+        record.notebook = Notebook.from_dict(data["notebook"])
         return record
 
+
+class Name(Field):
+    def __init__(self, value):
+        super().__init__(value)
