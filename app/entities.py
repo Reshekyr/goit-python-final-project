@@ -59,7 +59,7 @@ class Note:
         try:
             self.tags.remove(normalized)
         except ValueError:
-            print('Tag is not present')
+            print("Tag is not present")
 
     def __str__(self) -> str:
         """Return a human-friendly string representation of the note."""
@@ -298,7 +298,11 @@ class Notebook:
 
         scored = []
         for note in self._notes.values():
-            note_tags = {str(t).strip().lower() for t in (getattr(note, "tags", []) or []) if str(t).strip()}
+            note_tags = {
+                str(t).strip().lower()
+                for t in (getattr(note, "tags", []) or [])
+                if str(t).strip()
+            }
             matches = len(note_tags & query_tags)
             if matches > 0:
                 scored.append((matches, getattr(note, "title", ""), note))
@@ -628,19 +632,16 @@ class AddressBook(UserDict):
 
 
 class Email(Field):
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
     def __init__(self, email):
         is_email_valid = self.is_valid_email(email)
         if not is_email_valid:
             raise ValueError("Invalid email address.")
         super().__init__(email)
 
-
     def is_valid_email(self, email):
         return bool(re.match(self.pattern, email))
-
-
-
 
 
 class Record:
@@ -759,7 +760,6 @@ class Record:
             return
         return self.birthday.value.strftime("%d.%m.%Y")
 
-
     # ---------- representation ----------
 
     def __str__(self) -> str:  # pragma: no cover
@@ -802,7 +802,9 @@ class Record:
             "phones": [phone.value for phone in self.phones],
             "emails": [email.value for email in self.emails],
             "addresses": [address.value for address in self.addresses],
-            "birthday": self.birthday.value.strftime("%d.%m.%Y") if self.birthday else None,
+            "birthday": (
+                self.birthday.value.strftime("%d.%m.%Y") if self.birthday else None
+            ),
             "notebook": self.notebook.to_dict(),
         }
 

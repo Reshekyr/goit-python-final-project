@@ -1,4 +1,3 @@
-
 import sys
 from typing import Tuple
 
@@ -35,7 +34,10 @@ def main() -> None:
             continue
 
         # Exit/close aliases handled early
-        if command in {"exit", "close", "quit"} or raw.lower() in {"good bye", "goodbye"}:
+        if command in {"exit", "close", "quit"} or raw.lower() in {
+            "good bye",
+            "goodbye",
+        }:
             print("До зустрічі!")
             break
 
@@ -64,6 +66,3 @@ if __name__ == "__main__":
     except Exception as err:
         print(f"Фатальна помилка: {err}", file=sys.stderr)
         sys.exit(1)
-
-
-
