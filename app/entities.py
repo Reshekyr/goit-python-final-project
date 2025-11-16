@@ -324,6 +324,7 @@ class Notebook:
         for note_data in data["notes"]:
             note = Note.from_dict(note_data)
             notebook.add_note(note)
+        return notebook
 
 
 class Phone(Field):
@@ -366,10 +367,10 @@ class Birthday(Field):
         try:
             # Parse string into datetime object
             # Format: DD.MM.YYYY (e.g., 25.12.1990)
-            birthday = datetime.strptime(value, "%d.%m.%Y")
+            birthday = datetime.strptime(value, "%d.%m.%Y").date()
 
             # Check that date is not in the future
-            if birthday > datetime.now():
+            if birthday > datetime.today().date():
                 raise FutureDateError("Birthday cannot be in the future")
 
             # Store as datetime object (not string!)
@@ -665,6 +666,7 @@ class Record:
         self.emails: List[Email] = []
         self.addresses: List[Address] = []
         self.birthday: Optional[Birthday] = None
+        self.notebook = Notebook()
 
     # ---------- phone methods ----------
 
@@ -757,6 +759,7 @@ class Record:
             return
         return self.birthday.value.strftime("%d.%m.%Y")
 
+
     # ---------- representation ----------
 
     def __str__(self) -> str:  # pragma: no cover
@@ -800,6 +803,7 @@ class Record:
             "emails": [email.value for email in self.emails],
             "addresses": [address.value for address in self.addresses],
             "birthday": self.birthday.value.strftime("%d.%m.%Y") if self.birthday else None,
+            "notebook": self.notebook.to_dict(),
         }
 
     @staticmethod
@@ -812,6 +816,7 @@ class Record:
         record.emails = [Email(email) for email in data["emails"]]
         record.addresses = [Address(address) for address in data["addresses"]]
         record.birthday = Birthday(data["birthday"]) if data["birthday"] else None
+        record.notebook = Notebook.from_dict(data["notebook"])
         return record
 
 

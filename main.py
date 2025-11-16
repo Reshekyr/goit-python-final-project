@@ -4,11 +4,9 @@ from typing import Tuple
 
 from app.memory import load_data, save_data
 from app.utils import parse_input
-from app.config import handlers
+from app.config import handlers, VALID_COMMANDS
 
 from app.utils import suggest_command
-
-from app.config import VALID_COMMANDS
 
 
 def parse_input(user_input: str) -> Tuple[str, str]:
@@ -16,14 +14,15 @@ def parse_input(user_input: str) -> Tuple[str, str]:
     normalized = user_input.strip()
     if not normalized:
         return "", ""
-    parts = normalized.split(maxsplit=1)
+    parts = normalized.split()
     command = parts[0].lower()
-    args = parts[1] if len(parts) > 1 else ""
+    args = parts[1:] if len(parts) > 1 else ""
     return command, args
 
 
 def main() -> None:
     print("Вітаю! Це персональний помічник. Введіть команду.")
+    address_book = load_data()
     while True:
         try:
             raw = input(">>> ")
@@ -32,7 +31,6 @@ def main() -> None:
             break
 
         command, args = parse_input(raw)
-        address_book, notebook = load_data()
         if not command:
             continue
 
@@ -43,13 +41,10 @@ def main() -> None:
 
         # If we have real handlers mapping, use it; otherwise, only provide suggestions
         if command in handlers:
-            try:
-                handler = handlers[command]
-                result = handler(args) if args else handler()
-                if result is not None:
-                    print(result)
-            except Exception as exc:
-                print(f"Помилка виконання команди: {exc}")
+            handler = handlers[command]
+            result = handler(args, address_book)
+            if result is not None:
+                print(result)
         else:
             # Unknown command branch → suggest close matches
             suggestions = suggest_command(command)
@@ -60,7 +55,7 @@ def main() -> None:
                 # If nothing close, show a generic help tip with known commands
                 print("Невідома команда. Спробуйте 'help' або одну з відомих команд:")
                 print(", ".join(sorted(set(VALID_COMMANDS))))
-        save_data(address_book, notebook)
+    save_data(address_book)
 
 
 if __name__ == "__main__":

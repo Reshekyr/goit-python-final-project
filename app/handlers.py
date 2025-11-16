@@ -8,7 +8,7 @@ from app.entities import AddressBook, Record, Note
 # -----------------------------
 # Basic helper/utility handlers
 # -----------------------------
-def hello() -> str:
+def hello(_) -> str:
     """
     Returns a greeting message.
     """
@@ -102,18 +102,21 @@ def birthdays(args: List[str], contacts) -> str:
 
 
 @input_error
-def add_note(args: List[str], notebook) -> str:
+def add_note(args: List[str], contacts) -> str:
     """
     Creates a new note.
 
     Command:
-        add-note [title] [text...]
+        add-note [name] [title] [text...]
     """
     if len(args) < 2:
         raise ValueError("Please provide a title and content of the note")
 
-    title = args[0]
-    content = " ".join(args[1:])
+    name = args[0]
+    record = contacts.find(name)
+    notebook = record.notebook
+    title = args[1]
+    content = " ".join(args[2:])
 
     note = Note(title, content)
 
@@ -121,13 +124,16 @@ def add_note(args: List[str], notebook) -> str:
     return f"Note '{title}' created"
 
 
-def show_notes(_: List[str], notebook) -> str:
+def show_notes(args: List[str], contacts) -> str:
     """
     Shows all notes (without decorator, as an exception from the requirements).
 
     Command:
         show-notes
     """
+    name = args[0]
+    record = contacts.find(name)
+    notebook = record.notebook
     all_notes = notebook.show_all()
     if not all_notes:
         return "No notes"
@@ -166,7 +172,7 @@ def show_notes(_: List[str], notebook) -> str:
 
 
 @input_error
-def find_note(args: List[str], notebook) -> str:
+def find_note(args: List[str], contacts) -> str:
     """
     Search notes by a keyword.
 
@@ -175,7 +181,10 @@ def find_note(args: List[str], notebook) -> str:
     """
     if not args:
         raise ValueError("Please provide a keyword for the search")
-    keyword = args[0]
+    name = args[0]
+    keyword = args[1]
+    record = contacts.find(name)
+    notebook = record.notebook
     results = notebook.search_notes(keyword)
 
     if not results:
@@ -193,7 +202,7 @@ def find_note(args: List[str], notebook) -> str:
 
 
 @input_error
-def edit_note(args: List[str], notebook) -> str:
+def edit_note(args: List[str], contacts) -> str:
     """
     Edits the content of a note.
 
@@ -202,15 +211,17 @@ def edit_note(args: List[str], notebook) -> str:
     """
     if len(args) < 2:
         raise ValueError("Please provide a title and new text")
-
-    title = args[0]
-    new_content = " ".join(args[1:])
+    name = args[0]
+    title = args[1]
+    new_content = " ".join(args[2:])
+    record = contacts.find(name)
+    notebook = record.notebook
     notebook.edit_note(title, new_content)
     return f"Note '{title}' updated"
 
 
 @input_error
-def delete_note(args: List[str], notebook) -> str:
+def delete_note(args: List[str], contacts) -> str:
     """
     Deletes a note.
 
@@ -219,7 +230,10 @@ def delete_note(args: List[str], notebook) -> str:
     """
     if not args:
         raise ValueError("Please provide a title of the note")
-    title = args[0]
+    name = args[0]
+    title = args[1]
+    record = contacts.find(name)
+    notebook = record.notebook
     notebook.delete_note(title)
     return f"Note '{title}' deleted"
 
@@ -228,7 +242,7 @@ def delete_note(args: List[str], notebook) -> str:
 # Notes tags (extra features)
 # ---------------------------
 @input_error
-def add_tag(args: List[str], notebook) -> str:
+def add_tag(args: List[str], contacts) -> str:
     """
     Adds a tag to a note.
 
@@ -237,13 +251,17 @@ def add_tag(args: List[str], notebook) -> str:
     """
     if len(args) < 2:
         raise ValueError("Please provide a title and tag of the note")
-    title, tag = args[0], args[1]
-    notebook.add_tag(title, tag)
+
+    name, title, tag = args[0], args[1], args[2]
+    record = contacts.find(name)
+    notebook = record.notebook
+    note = notebook.find_note(title)
+    note.add_tag(tag)
     return f"Tag '{tag}' added to note '{title}'"
 
 
 @input_error
-def find_by_tag(args: List[str], notebook) -> str:
+def find_by_tag(args: List[str], contacts) -> str:
     """
     Search notes by a tag.
 
@@ -252,7 +270,10 @@ def find_by_tag(args: List[str], notebook) -> str:
     """
     if not args:
         raise ValueError("Please provide a tag")
-    tag = args[0]
+    name =  args[0]
+    tag = args[1]
+    record = contacts.find(name)
+    notebook = record.notebook
     results = notebook.find_by_tag(tag)
     if not results:
         return "Nothing found"
@@ -264,13 +285,16 @@ def find_by_tag(args: List[str], notebook) -> str:
 
 
 @input_error
-def show_tags(_: List[str], notebook) -> str:
+def show_tags(args: List[str], contacts) -> str:
     """
     Returns all unique tags.
 
     Command:
         show-tags
     """
+    name = args[0]
+    record = contacts.find(name)
+    notebook = record.notebook
     tags = notebook.get_all_tags()
     if not tags:
         return "No tags"
@@ -278,7 +302,7 @@ def show_tags(_: List[str], notebook) -> str:
 
 
 @input_error
-def sort_by_tags(args: List[str], notebook) -> str:
+def sort_by_tags(args: List[str], contacts) -> str:
     """
     Sorts notes by relevance to the specified tags.
 
@@ -287,7 +311,10 @@ def sort_by_tags(args: List[str], notebook) -> str:
     """
     if not args:
         raise ValueError("Please provide at least one tag")
-    sorted_notes = notebook.sort_by_tags(args)
+    name = args[0]
+    record = contacts.find(name)
+    notebook = record.notebook
+    sorted_notes = notebook.sort_by_tags(args[1:])
     if not sorted_notes:
         return "No notes found"
 
@@ -348,17 +375,17 @@ def get_all(_: list[str], contacts: AddressBook) -> str:
     for contact_name, record in contacts.data.items():
         # Phones
         phones_str = ', '.join(phone.value for phone in record.phones) if record.phones else "no phones"
-        
+
         # Birthday
         birthday_str = f" - Birthday: {record.birthday.value.strftime('%d.%m.%Y')}" if record.birthday and record.birthday.value else ""
-        
-        # Email
-        email_str = f" - Email: {record.email.value}" if record.email and record.email.value else ""
-        
-        # Address
-        address_str = f" - Address: {record.address.value}" if record.address and record.address.value else ""
-        
-        result.append(f"👤 {contact_name} - {phones_str}{birthday_str}{email_str}{address_str}")
+
+        # Emails (list)
+        emails_str = f" - Emails: {', '.join(email.value for email in record.emails)}" if record.emails else " - no emails"
+
+        # Addresses (list)
+        addresses_str = f" - Addresses: {', '.join(address.value for address in record.addresses)}" if record.addresses else " - no addresses"
+
+        result.append(f"👤 {contact_name} - {phones_str}{birthday_str}{emails_str}{addresses_str}")
 
     return "\n".join(result)
 

@@ -1,7 +1,7 @@
 #===
 # Fuzzy matching configuration
 #===
-from typing import Dict, Callable
+from typing import Callable, Dict
 
 from app.handlers import hello, add_birthday, show_birthday, birthdays, add_note, show_notes, find_note, edit_note, \
     delete_note, add_tag, find_by_tag, show_tags, sort_by_tags, add_contact, get_phone, get_all, search_contacts, \
@@ -39,6 +39,7 @@ NOTEBOOK_FILE = "notebook.json"
 # ----------------
 # Handlers mapping
 # ----------------
+
 handlers: Dict[str, Callable] = {
     # base
     "hello": hello,
@@ -71,4 +72,3 @@ handlers: Dict[str, Callable] = {
     "add-email": add_email,
     "add-address": add_address,
 }
-

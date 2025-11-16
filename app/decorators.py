@@ -2,7 +2,6 @@ from functools import wraps
 
 
 def input_error(func: callable) -> callable:
-    @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
