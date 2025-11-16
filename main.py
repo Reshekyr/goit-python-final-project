@@ -2,10 +2,9 @@
 import sys
 from typing import Tuple
 from app.utils import parse_input
-from app.handlers import handlers
+from app.config import handlers
 
-#TODO
-from app.suggestions import suggest_command
+from app.utils import suggest_command
 
 from app.config import VALID_COMMANDS
 
